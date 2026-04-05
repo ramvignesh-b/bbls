@@ -125,18 +125,38 @@ function buildExtension(target) {
 // ─── Entry Point ───────────────────────────────────────────────────────────
 
 (function main() {
-  console.log('\n📦 Building Bring Back Live Seek…\n');
+  const args = process.argv.slice(2);
+  const target = args[0]; // chrome, firefox or userscript
 
-  // Clean previous build
-  rimraf(DIST);
+  console.log(`\n📦 Building Bring Back Live Seek [${target || 'all'}]…\n`);
+
+  // Ensure dist exists
   ensureDir(DIST);
 
   const version = getVersion();
   console.log(`  version: ${version}\n`);
 
-  buildUserscript(version);
-  buildExtension('chrome');
-  buildExtension('firefox');
+  let builtAny = false;
 
-  console.log('\n✅ Build complete → dist/\n');
+  if (!target || target === 'userscript') {
+    buildUserscript(version);
+    builtAny = true;
+  }
+  
+  if (!target || target === 'chrome') {
+    buildExtension('chrome');
+    builtAny = true;
+  }
+
+  if (!target || target === 'firefox') {
+    buildExtension('firefox');
+    builtAny = true;
+  }
+
+  if (!builtAny) {
+    console.error(`❌ Error: Unknown target "${target}". Use: chrome, firefox, or userscript.`);
+    process.exit(1);
+  }
+
+  console.log('\n✅ Build complete.\n');
 })();

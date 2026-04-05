@@ -5,7 +5,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "release": "node scripts/release.mjs"
   },
   "keywords": [
     "hotstar",

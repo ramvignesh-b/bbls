@@ -13,9 +13,12 @@ permissions:
 jobs:
   # ── 1. Build ────────────────────────────────────────────────────────────────
   build:
-    name: Build artifacts
+    name: Build ${{ matrix.target }}
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        target: [chrome, firefox, userscript]
+    
     steps:
       - uses: actions/checkout@v4
 
@@ -23,14 +26,16 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Build
-        run: node scripts/build.mjs
+      - name: Build targeted artifact
+        run: node scripts/build.mjs ${{ matrix.target }}
 
-      - name: Upload dist/ as artifact
+      - name: Upload platform artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist-artifacts
-          path: dist/
+          name: bbls-${{ matrix.target }}
+          path: |
+            dist/*.zip
+            dist/*.user.js
           retention-days: 1
 
   # ── 2. GitHub Release ───────────────────────────────────────────────────────
@@ -40,34 +45,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          name: dist-artifacts
-          path: dist/
+          pattern: bbls-*
+          path: release-assets
+          merge-multiple: true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/bbls.user.js
-            dist/chrome.zip
-            dist/firefox.zip
+            release-assets/*.user.js
+            release-assets/*.zip
           generate_release_notes: true
           fail_on_unmatched_files: true
 
   # ── 3. Firefox AMO ──────────────────────────────────────────────────────────
   firefox:
     name: Firefox AMO
-    needs: github-release
+    needs: build
     runs-on: ubuntu-latest
 
     if: ${{ secrets.AMO_JWT_ISSUER != '' }}
 
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download Firefox artifact
+        uses: actions/download-artifact@v4
         with:
-          name: dist-artifacts
-          path: dist/
+          name: bbls-firefox
+          path: dist
 
       - uses: actions/setup-node@v4
         with:
@@ -100,10 +107,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
+      - name: Download Userscript artifact
+        uses: actions/download-artifact@v4
         with:
-          name: dist-artifacts
-          path: dist/
+          name: bbls-userscript
+          path: dist
 
       - name: Push bbls.user.js to dist branch
         env:
