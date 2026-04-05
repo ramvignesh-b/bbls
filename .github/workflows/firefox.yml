@@ -1,0 +1,50 @@
+name: Publish — Firefox AMO
+
+# ── Triggers ─────────────────────────────────────────────────────────────────
+# Runs automatically from release.yml, or manually via the Actions UI.
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: 'AMO channel: listed or unlisted'
+        required: false
+        default: 'listed'
+
+jobs:
+  publish:
+    name: Sign & Submit to Firefox AMO
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build artifacts
+        run: node scripts/build.mjs
+
+      - name: Sign & Submit to AMO
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          CHANNEL="${{ github.event.inputs.channel || 'listed' }}"
+          npx -y web-ext@latest sign \
+            --source-dir dist/firefox \
+            --api-key    "$AMO_JWT_ISSUER" \
+            --api-secret "$AMO_JWT_SECRET" \
+            --channel    "$CHANNEL"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Required GitHub Secrets (Settings → Secrets → Actions):
+#
+#   AMO_JWT_ISSUER  — Your AMO API key  (found at addons.mozilla.org/developers/addon/api/key/)
+#   AMO_JWT_SECRET  — Your AMO API secret (shown once on the same page)
+#
+# The extension ID is declared in src/manifest.firefox.json under
+# browser_specific_settings.gecko.id = "bbls@ramvignesh.dev"
+#
+# See: https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#web-ext-sign
+# ─────────────────────────────────────────────────────────────────────────────

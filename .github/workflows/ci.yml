@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build all artifacts
+        run: node scripts/build.mjs
+
+      - name: Verify expected outputs exist
+        run: |
+          test -f dist/bbls.user.js  && echo "✔ bbls.user.js"
+          test -f dist/chrome.zip    && echo "✔ chrome.zip"
+          test -f dist/firefox.zip   && echo "✔ firefox.zip"

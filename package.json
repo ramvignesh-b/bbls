@@ -1,0 +1,32 @@
+{
+  "name": "bring-back-live-seek",
+  "version": "1.0.0",
+  "description": "Restores seek buttons on Hotstar live streams — Chrome, Firefox & Tampermonkey/GreasyFork.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "keywords": [
+    "hotstar",
+    "userscript",
+    "tampermonkey",
+    "greasyfork",
+    "browser-extension",
+    "chrome-extension",
+    "firefox-addon"
+  ],
+  "author": "RamVignesh B <hi@ramvignesh.dev> (https://hi.ramvignesh.dev)",
+  "license": "MIT",
+  "homepage": "https://github.com/ramvignesh-b/bbls#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ramvignesh-b/bbls.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ramvignesh-b/bbls/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

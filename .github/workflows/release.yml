@@ -1,0 +1,136 @@
+name: Release
+
+# ── Trigger ──────────────────────────────────────────────────────────────────
+# Push any semver tag (e.g. v1.2.3) to kick off the full release pipeline.
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write  # needed to create the GitHub Release and push to dist branch
+
+jobs:
+  # ── 1. Build ────────────────────────────────────────────────────────────────
+  build:
+    name: Build artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build
+        run: node scripts/build.mjs
+
+      - name: Upload dist/ as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist/
+          retention-days: 1
+
+  # ── 2. GitHub Release ───────────────────────────────────────────────────────
+  github-release:
+    name: GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/bbls.user.js
+            dist/chrome.zip
+            dist/firefox.zip
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+
+  # ── 3. Firefox AMO ──────────────────────────────────────────────────────────
+  firefox:
+    name: Firefox AMO
+    needs: github-release
+    runs-on: ubuntu-latest
+
+    if: ${{ secrets.AMO_JWT_ISSUER != '' }}
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist/
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Unzip Firefox package
+        run: |
+          mkdir -p dist/firefox
+          unzip -o dist/firefox.zip -d dist/firefox
+
+      - name: Sign & Submit to Firefox AMO
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          npx -y web-ext@latest sign \
+            --source-dir dist/firefox \
+            --api-key     "$AMO_JWT_ISSUER" \
+            --api-secret  "$AMO_JWT_SECRET" \
+            --channel     listed
+
+  # ── 4. GreasyFork sync ──────────────────────────────────────────────────────
+  greasyfork:
+    name: GreasyFork Sync (dist branch)
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist/
+
+      - name: Push bbls.user.js to dist branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Copy the built userscript to a temp location before switching branches
+          cp dist/bbls.user.js /tmp/bbls.user.js
+
+          # Create or reset the dist branch (orphan if first time)
+          if git show-ref --verify --quiet refs/remotes/origin/dist; then
+            git checkout -B dist origin/dist
+            git rm -rf . --quiet 2>/dev/null || true
+          else
+            git checkout --orphan dist
+            git rm -rf . --quiet 2>/dev/null || true
+          fi
+
+          cp /tmp/bbls.user.js ./bbls.user.js
+          git add bbls.user.js
+
+          if git diff --staged --quiet; then
+            echo "No changes to sync — skipping commit."
+          else
+            git commit -m "chore(dist): sync userscript $(date -u +'%Y-%m-%dT%H:%M:%SZ') [skip ci]"
+            git push --force origin dist
+            echo "✔ Pushed to dist branch."
+          fi

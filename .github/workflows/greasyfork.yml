@@ -1,0 +1,61 @@
+name: Sync — GreasyFork (dist branch)
+
+# ── Triggers ─────────────────────────────────────────────────────────────────
+# Runs automatically from release.yml, or manually via the Actions UI.
+#
+# How GreasyFork sync works:
+#   1. This workflow pushes the built bbls.user.js to the `dist` branch.
+#   2. On GreasyFork, your script is configured to sync from the raw URL:
+#      https://raw.githubusercontent.com/ramvignesh-b/bbls/dist/bbls.user.js
+#   3. GreasyFork automatically picks up new versions when the file changes.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Push .user.js to dist branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history needed to switch branches
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build artifacts
+        run: node scripts/build.mjs
+
+      - name: Push to dist branch
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Stash the built file before switching branches
+          cp dist/bbls.user.js /tmp/bbls.user.js
+
+          # Switch to (or create) the dist branch
+          if git show-ref --verify --quiet refs/remotes/origin/dist; then
+            git checkout -B dist origin/dist
+            git rm -rf . --quiet 2>/dev/null || true
+          else
+            git checkout --orphan dist
+            git rm -rf . --quiet 2>/dev/null || true
+          fi
+
+          # Place the userscript at the root of the dist branch
+          cp /tmp/bbls.user.js ./bbls.user.js
+          git add bbls.user.js
+
+          if git diff --staged --quiet; then
+            echo "No changes to sync — dist branch is already up-to-date."
+          else
+            git commit -m "chore(dist): sync userscript $(date -u +'%Y-%m-%dT%H:%M:%SZ') [skip ci]"
+            git push --force origin dist
+            echo "✔ bbls.user.js pushed to dist branch."
+          fi
