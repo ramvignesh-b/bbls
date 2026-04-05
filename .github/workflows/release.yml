@@ -66,29 +66,33 @@ jobs:
     name: Firefox AMO
     needs: build
     runs-on: ubuntu-latest
+    env:
+      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
 
     steps:
       - name: Download Firefox artifact
-        if: ${{ secrets.AMO_JWT_ISSUER != '' }}
+        if: env.AMO_JWT_ISSUER != ''
         uses: actions/download-artifact@v4
         with:
           name: bbls-firefox
           path: dist
 
       - uses: actions/setup-node@v4
-        if: ${{ secrets.AMO_JWT_ISSUER != '' }}
+        if: env.AMO_JWT_ISSUER != ''
         with:
           node-version: '20'
 
       - name: Unzip Firefox package
-        if: ${{ secrets.AMO_JWT_ISSUER != '' }}
+        if: env.AMO_JWT_ISSUER != ''
         run: |
           mkdir -p dist/firefox
           unzip -o dist/firefox.zip -d dist/firefox
 
       - name: Sign & Submit to Firefox AMO
-        if: ${{ secrets.AMO_JWT_ISSUER != '' }}
+        if: env.AMO_JWT_ISSUER != ''
         env:
+          # Already defined in job-level env, but keeping here for clarity in this step
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
         run: |
