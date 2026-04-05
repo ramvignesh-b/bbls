@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Bring Back Live Seek",
   "short_name": "BBLS",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Restores seek buttons (rewind / fast-forward) on Hotstar live streams with a glassmorphism UI.",
   "icons": {
     "16": "icons/icon-16.png",
