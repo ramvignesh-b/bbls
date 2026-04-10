@@ -7,8 +7,8 @@
   <a href="https://github.com/ramvignesh-b/bbls/releases/latest">
     <img alt="Download for Chrome" src="https://img.shields.io/badge/Chrome-Download_Extension-4285F4?logo=googlechrome&logoColor=white&style=for-the-badge" />
   </a>
-  <a href="https://github.com/ramvignesh-b/bbls/releases/latest">
-    <img alt="Firefox Add-ons" src="https://img.shields.io/badge/Firefox_Add--ons-Coming_Soon-FF7139?logo=firefox&logoColor=white&style=for-the-badge" />
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/bring-back-live-seek/">
+    <img alt="Firefox Add-ons" src="https://img.shields.io/badge/Firefox_Add--ons-Get_it_now-FF7139?logo=firefox&logoColor=white&style=for-the-badge" />
   </a>
   <a href="https://raw.githubusercontent.com/ramvignesh-b/bbls/dist/bbls.user.js">
     <img alt="Install Userscript" src="https://img.shields.io/badge/Tampermonkey-Install_Script-670000?logo=tampermonkey&logoColor=white&style=for-the-badge" />
@@ -63,8 +63,11 @@
 
 ### Option 2 — Firefox Add-on
 
-The Firefox AMO listing is pending review. In the meantime, download `firefox.zip`
-from the **[latest release](https://github.com/ramvignesh-b/bbls/releases/latest)**
+Get the extension from the official Firefox Add-ons store:
+
+**[Install for Firefox](https://addons.mozilla.org/en-US/firefox/addon/bring-back-live-seek/)**
+
+Alternatively, download `firefox.zip` from the **[latest release](https://github.com/ramvignesh-b/bbls/releases/latest)**
 and load it via `about:debugging` — see [Development → Firefox](#load-as-a-temporary-add-on-firefox) below.
 
 ### Option 3 — Tampermonkey / Violentmonkey (all browsers)
