@@ -1,6 +1,6 @@
 {
   "name": "bring-back-live-seek",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Restores seek buttons on Hotstar live streams — Chrome, Firefox & Tampermonkey/GreasyFork.",
   "type": "module",
   "private": true,
