@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bring Back Live Seek
 // @namespace    https://github.com/ramvignesh-b/bbls
-// @version      1.0.3
+// @version      1.0.4
 // @description  Restores seek (rewind/forward) buttons on Hotstar live streams with a glassmorphism UI.
 // @author       RamVignesh B
 // @homepageURL  https://github.com/ramvignesh-b/bbls
